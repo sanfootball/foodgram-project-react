@@ -16,21 +16,24 @@ class RecipeIngredientInline(admin.TabularInline):
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    """Класс настройки админки ингредиентов."""
+    """Настройки админки ингредиентов."""
 
+    empty_value_display = '-empty-'
     list_display = (
         'pk',
         'name',
         'measurement_unit'
     )
+    ordering = ('name',)
     list_filter = ('name',)
     search_fields = ('name',)
 
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    """Класс настройки админки тегов."""
+    """Настройки админки тегов."""
 
+    empty_value_display = '-empty-'
     list_display = (
         'pk',
         'name',
@@ -38,23 +41,26 @@ class TagAdmin(admin.ModelAdmin):
         'slug'
     )
     search_fields = ('name', 'slug')
+    ordering = ('name', 'id',)
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    """Класс настройки админки рецептов."""
+    """Настройки админки рецептов."""
 
+    empty_value_display = '-empty-'
+    list_editable = ('author',)
     list_display = (
         'pk',
         'name',
         'author',
         'text',
         'cooking_time',
-        'image',
         'pub_date',
     )
     list_filter = ('author', 'name', 'tags')
     search_fields = ('name',)
+    ordering = ('pub_date', 'name',)
     inlines = [RecipeIngredientInline]
 
     def num_favorites(self, obj):
@@ -66,8 +72,9 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @admin.register(RecipeIngredient)
 class RecipeIngredientAdmin(admin.ModelAdmin):
-    """Класс настройки соответствия игредиентов и рецептов."""
+    """Настройки соответствия игредиентов и рецептов."""
 
+    empty_value_display = '-empty-'
     list_display = (
         'pk',
         'recipe',
@@ -80,8 +87,9 @@ class RecipeIngredientAdmin(admin.ModelAdmin):
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    """Класс настройки админки избранного."""
+    """Настройки админки избранного."""
 
+    empty_value_display = '-empty-'
     list_display = (
         'pk',
         'user',
@@ -91,8 +99,9 @@ class FavoriteAdmin(admin.ModelAdmin):
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
-    """Класс настройки админки рецептов, которые добавлены в список покупок."""
+    """Настройки админки рецептов, которые добавлены в список покупок."""
 
+    empty_value_display = '-empty-'
     list_display = (
         'pk',
         'user',

@@ -37,7 +37,7 @@ class Tag(models.Model):
         unique=True
     )
     color = models.CharField(
-        max_length=7,
+        max_length=10,
         verbose_name='Цвет тега',
         unique=True
     )
