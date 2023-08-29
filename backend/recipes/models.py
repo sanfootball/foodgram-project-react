@@ -1,25 +1,25 @@
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
+from django.db import models
 
 User = get_user_model()
 
 
 class Ingredient(models.Model):
     """Модель ингредиента для рецептов.
-    Описывает продукты, необходимые для приготовления блюда по рецепту.
-    """
+    Описывает продукты, необходимые для блюда по рецепту."""
     name = models.CharField(
         max_length=200,
         verbose_name='Название ингредиента',
         db_index=True
     )
     measurement_unit = models.CharField(
-        max_length=200,
+        max_length=20,
         verbose_name='Ед. измерения.'
     )
 
     class Meta:
-        ordering = ['id']
+        ordering = ['name']
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
@@ -29,8 +29,8 @@ class Ingredient(models.Model):
 
 class Tag(models.Model):
     """Модель тега для рецептов.
-    Описывает метки, с помощью которых пользователи размечают публикации.
-    """
+    Описывает теги, с помощью которых пользователи могут
+    выбрать рецепты соответствующие этому тегу."""
     name = models.CharField(
         max_length=20,
         verbose_name='Имя тега',
@@ -58,8 +58,7 @@ class Tag(models.Model):
 
 class Recipe(models.Model):
     """Модель рецепта.
-    Описывает рецепты, которые пользователи публикуют на сервисе.
-    """
+    Описывает рецепты, которые пользователи размещают на сайте."""
     name = models.CharField(
         verbose_name='Название рецепта',
         max_length=200,
@@ -83,7 +82,8 @@ class Recipe(models.Model):
         verbose_name='Автор',
     )
     cooking_time = models.PositiveSmallIntegerField(
-        verbose_name='Время приготовления, мин'
+        verbose_name='Время приготовления, мин',
+        validators=[MinValueValidator(1, message='Не меньше 1 мин')]
     )
     tags = models.ManyToManyField(
         Tag,
@@ -101,6 +101,10 @@ class Recipe(models.Model):
         ordering = ['-pub_date', 'name']
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'author'],
+                                    name='unique_recipe_author')
+        ]
 
     def __str__(self):
         return self.name
@@ -126,6 +130,10 @@ class RecipeIngredient(models.Model):
         ordering = ['recipe__name']
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
+        constraints = [
+            models.UniqueConstraint(fields=['ingredient', 'recipe'],
+                                    name='unique_ingredient_recipe')
+        ]
 
     def __str__(self):
         return f'{self.recipe}: {self.ingredient}'
@@ -175,3 +183,33 @@ class ShoppingCart(models.Model):
 
     def __str__(self):
         return '{self.user}: {self.recipe}'
+
+
+class Subscription(models.Model):
+    """Модель подписок на авторов рецептов."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscriber',
+        verbose_name='Подписчик',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscribing',
+        verbose_name='Автор'
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_subscribe'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} подписан на {self.author}'

@@ -12,6 +12,7 @@ data = cursor.fetchall()
 
 
 class Command(BaseCommand):
+
     def handle(self, *args, **kwargs):
         with open(
             'C:/Users/Админ/Dev/foodgram-project-react/data/ingredients.csv',

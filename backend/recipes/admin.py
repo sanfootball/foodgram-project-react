@@ -1,12 +1,7 @@
 from django.contrib import admin
-from .models import (
-    Recipe,
-    Ingredient,
-    Tag,
-    RecipeIngredient,
-    Favorite,
-    ShoppingCart
-)
+
+from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingCart, Tag)
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -18,82 +13,75 @@ class RecipeIngredientInline(admin.TabularInline):
 class IngredientAdmin(admin.ModelAdmin):
     """Настройки админки ингредиентов."""
 
-    empty_value_display = '-empty-'
-    list_display = (
-        'pk',
-        'name',
-        'measurement_unit'
-    )
-    ordering = ('name',)
-    list_filter = ('name',)
-    search_fields = ('name',)
+    empty_value_display = "-empty-"
+    list_display = ("pk", "name", "measurement_unit")
+    ordering = ("name",)
+    list_filter = ("name",)
+    search_fields = ("name",)
 
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     """Настройки админки тегов."""
 
-    empty_value_display = '-empty-'
-    list_display = (
-        'pk',
-        'name',
-        'color',
-        'slug'
+    empty_value_display = "-empty-"
+    list_display = ("pk", "name", "color", "slug")
+    search_fields = ("name", "slug")
+    ordering = (
+        "name",
+        "id",
     )
-    search_fields = ('name', 'slug')
-    ordering = ('name', 'id',)
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     """Настройки админки рецептов."""
 
-    empty_value_display = '-empty-'
-    list_editable = ('author',)
+    empty_value_display = "-empty-"
+    list_editable = ("author",)
     list_display = (
-        'pk',
-        'name',
-        'author',
-        'text',
-        'cooking_time',
-        'pub_date',
+        "pk",
+        "name",
+        "author",
+        "text",
+        "cooking_time",
+        "pub_date",
     )
-    list_filter = ('author', 'name', 'tags')
-    search_fields = ('name',)
-    ordering = ('pub_date', 'name',)
+    list_filter = ("author", "name", "tags")
+    search_fields = ("name",)
+    ordering = (
+        "pub_date",
+        "name",
+    )
     inlines = [RecipeIngredientInline]
 
     def num_favorites(self, obj):
         return obj.favorites.count()
-    num_favorites.short_description = 'Избранное'
 
-    readonly_fields = ('num_favorites',)
+    num_favorites.short_description = "Избранное"
+
+    readonly_fields = ("num_favorites",)
 
 
 @admin.register(RecipeIngredient)
 class RecipeIngredientAdmin(admin.ModelAdmin):
     """Настройки соответствия игредиентов и рецептов."""
 
-    empty_value_display = '-empty-'
-    list_display = (
-        'pk',
-        'recipe',
-        'ingredient',
-        'amount'
-    )
-    list_filter = ('recipe__name',)
-    search_fields = ('recipe__name', 'ingredient__name')
+    empty_value_display = "-empty-"
+    list_display = ("pk", "recipe", "ingredient", "amount")
+    list_filter = ("recipe__name",)
+    search_fields = ("recipe__name", "ingredient__name")
 
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     """Настройки админки избранного."""
 
-    empty_value_display = '-empty-'
+    empty_value_display = "-empty-"
     list_display = (
-        'pk',
-        'user',
-        'recipe',
+        "pk",
+        "user",
+        "recipe",
     )
 
 
@@ -101,9 +89,9 @@ class FavoriteAdmin(admin.ModelAdmin):
 class ShoppingCartAdmin(admin.ModelAdmin):
     """Настройки админки рецептов, которые добавлены в список покупок."""
 
-    empty_value_display = '-empty-'
+    empty_value_display = "-empty-"
     list_display = (
-        'pk',
-        'user',
-        'recipe',
+        "pk",
+        "user",
+        "recipe",
     )
