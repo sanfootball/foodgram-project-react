@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
-                     ShoppingCart, Tag)
+                     ShoppingCart, Tag, Subscription)
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -95,3 +95,8 @@ class ShoppingCartAdmin(admin.ModelAdmin):
         "user",
         "recipe",
     )
+
+
+@admin.register(Subscription)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ("user", "author")
