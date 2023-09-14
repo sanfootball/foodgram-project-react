@@ -2,7 +2,6 @@ import csv
 
 from backend_foodgram.settings import CSV_DIR
 from django.core.management import BaseCommand
-
 from recipes.models import Ingredient
 
 

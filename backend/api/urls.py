@@ -3,7 +3,6 @@ from rest_framework import routers
 
 from .views import (CustomUserViewSet, IngredientViewSet, RecipeViewSet,
                     TagViewSet)
-# from djoser.views import UserViewSet
 
 app_name = 'api'
 

@@ -4,18 +4,17 @@ from backend_foodgram.settings import PATTERN
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db.models import F
-from djoser.serializers import UserSerializer
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Subscription, Tag)
-from rest_framework import serializers
-from users.models import User
+from rest_framework import serializers, status
 from rest_framework.validators import UniqueTogetherValidator
-from rest_framework import status
+from users.models import User
 
 User = get_user_model()
 
 
-class CustomUserSerializer(UserSerializer):
+class CustomUserSerializer(UserSerializer, UserCreateSerializer):
     """Сериализатор для модели User."""
     username = serializers.RegexField(regex=PATTERN, max_length=150)
     is_subscribed = serializers.SerializerMethodField()
@@ -153,7 +152,6 @@ class RecipeCreateSerializer(RecipeGETSerializer):
                 amount=ingredient['amount'])
 
     def create(self, validated_data):
-        print(validated_data)
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         print("Ingredients List:", ingredients)
@@ -161,11 +159,9 @@ class RecipeCreateSerializer(RecipeGETSerializer):
         author = self.context.get('request').user
         print("Author:", author)
         recipe = Recipe.objects.create(**validated_data)
-        print("Recipe object:", recipe)
         recipe.tags.set(tags)
-        print("Recipe tags:", recipe.tags.all())
         self.create_ingredients(ingredients, recipe)
-        print("Resulting recipe:", recipe)
+        print("Recipe:", recipe)
         return recipe
 
     def update(self, instance, validated_data):
