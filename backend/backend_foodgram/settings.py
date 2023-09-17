@@ -1,19 +1,16 @@
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'data_is_hidden_from_you')
+SECRET_KEY = os.getenv('SECRET_KEY', 'secret')
 
 DEBUG = True
 
 AUTH_USER_MODEL = 'users.User'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 INSTALLED_APPS = [
     'users.apps.UsersConfig',
