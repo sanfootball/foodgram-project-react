@@ -218,20 +218,9 @@ class ShoppingCartRecipeSerializer(serializers.ModelSerializer):
         ]
 
 
-class SubscriptionRecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор для рецептов на странице подписок."""
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id', 'tags', 'author', 'ingredients', 'is_favorited',
-            'is_in_shopping_cart', 'name', 'text', 'cooking_time')
-        read_only_fields = ('id', 'author', 'pub_date')
-
-
 class SubscriptionSerializer(CustomUserSerializer):
     """Сериализатор для модели Subscription."""
-    recipes = SubscriptionRecipeSerializer(many=True)
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
     username = serializers.ReadOnlyField(read_only=True)
 
