@@ -21,7 +21,7 @@ from .permissions import AuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
                           Limit_field_RecipeSerializer, RecipeCreateSerializer,
                           RecipeGETSerializer, ShoppingCartRecipeSerializer,
-                          SubscriptionSerializer, TagSerializer)
+                          SubscriptionsSerializer, TagSerializer)
 
 User = get_user_model()
 
@@ -36,48 +36,64 @@ class CustomUserViewSet(UserViewSet):
     @action(methods=["GET"], detail=False,
             url_path='subscriptions',
             url_name='subscriptions',
-            serializer_class=SubscriptionSerializer)
+            permission_classes=(IsAuthenticated,),
+            serializer_class=SubscriptionsSerializer)
     def subscriptions(self, request):
         """Метод для получения списка подписок."""
         user = request.user
         paginated_queryset = self.paginate_queryset(
-            User.objects.filter(subscribing__user=user))
-        serializer = SubscriptionSerializer(
+            Subscription.objects.filter(user=user))
+        serializer = SubscriptionsSerializer(
             paginated_queryset, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @action(
-        detail=True,
-        methods=['POST', 'DELETE'],
-        permission_classes=[IsAuthenticated, ])
-    def subscribe(self, request, id):
-        """Подписываем / отписываемся на пользователя.
-        Доступно только авторизованным пользователям.
-        """
-        author = get_object_or_404(User, id=id)
-        if not User.objects.filter(id=id).exists():
-            raise NOT_FOUND(detail="Пользователь-автор не найден.")
-        if request.user == author:
-            return Response(
-                {"errors": "Подписаться на самого себя невозможно."},
-                status=status.HTTP_400_BAD_REQUEST)
+        detail=False,
+        url_path=r'(?P<id>\d+)/subscribe',
+        methods=['post', 'delete'],
+        permission_classes=(IsAuthenticated,),
+    )
+    def subscribe(self, request, *args, **kwargs):
+        '''Подписка и отписка от авторов.'''
+        user = request.user
+        author = get_object_or_404(User, id=kwargs.get('id'))
+        check_subscription = Subscription.objects.filter(
+            user=user,
+            author=author,
+        ).exists()
         if request.method == 'POST':
-            serializer = SubscriptionSerializer(
-                author, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            Subscription.objects.create(user=self.request.user, author=author)
+            if author.id == user.id:
+                return Response(
+                    {'errors': 'так не пойдет, подписаться на себя нельзя!'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if check_subscription:
+                return Response(
+                    {'errors': 'так не пойдет, ты уже подписался на автора'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            author_sub = Subscription.objects.create(
+                user=user,
+                author=author,
+            )
+            serializer = SubscriptionsSerializer(
+                author_sub,
+                context={
+                    'request': request,
+                },
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
-            subscription = Subscription.objects.filter(
-                author=author, user=self.request.user).first()
-            if subscription is None:
-                return Response(
-                    {"errors": "Вы не подписаны на этого автора!"},
-                    status=status.HTTP_400_BAD_REQUEST)
-            subscription.delete()
+            if check_subscription:
+                Subscription.objects.filter(
+                    user=user,
+                    author=author,
+                ).delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(
-                f'Вы отписались от {author}',
-                status=status.HTTP_204_NO_CONTENT)
+                {'errors': 'так не пойдет, ты не подписывался на автора'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class TagViewSet(ReadOnlyModelViewSet):

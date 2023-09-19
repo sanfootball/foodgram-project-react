@@ -17,12 +17,7 @@ User = get_user_model()
 class CustomUserSerializer(UserSerializer, UserCreateSerializer):
     """Сериализатор для модели User."""
     username = serializers.RegexField(regex=PATTERN, max_length=150)
-    is_subscribed = serializers.SerializerMethodField()
-
-    def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        return user.is_authenticated and Subscription.objects.filter(
-            author=obj, user=user).exists()
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -30,6 +25,11 @@ class CustomUserSerializer(UserSerializer, UserCreateSerializer):
             'email', 'id', 'username', 'first_name', 'last_name', 'password',
             'is_subscribed')
         extra_kwargs = {'password': {'write_only': True}}
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        return (request and request.user.is_authenticated
+                and request.user.subscriber.filter(author=obj).exists())
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -218,37 +218,63 @@ class ShoppingCartRecipeSerializer(serializers.ModelSerializer):
         ]
 
 
-class SubscriptionSerializer(CustomUserSerializer):
-    """Сериализатор для модели Subscription."""
-    recipes = serializers.SerializerMethodField()
+class SubscriptionsSerializer(UserSerializer):
+    '''Сериалайзер для работы с подписками.'''
+
+    email = serializers.EmailField(source='author.email')
+    id = serializers.IntegerField(source='author.id')
+    username = serializers.CharField(source='author.username')
+    first_name = serializers.CharField(source='author.first_name')
+    last_name = serializers.CharField(source='author.last_name')
+    is_subscribed = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
-    username = serializers.ReadOnlyField(read_only=True)
+    recipes = serializers.SerializerMethodField()
 
-    class Meta(CustomUserSerializer.Meta):
+    class Meta:
+        model = User
         fields = (
-            "email", "id", "username", "first_name", "last_name",
-            "is_subscribed", "recipes", "recipes_count")
-        read_only_fields = ('email', 'username', 'last_name', 'first_name',)
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count',
+        )
 
-    def validate(self, data):
-        author = self.instance
-        user = self.context.get('request').user
-        if Subscription.objects.filter(user=user.id, author=author).exists():
-            raise serializers.ValidationError(
-                'Вы уже подписаны на этого пользователя!',
-                code=status.HTTP_400_BAD_REQUEST)
-        return data
+    def get_is_subscribed(self, obj):
+        '''Проверка подписки пользователя на автора рецепта.'''
+        request = self.context.get('request')
+        if request.auth is None:
+            return False
+
+        return Subscription.objects.filter(
+            author=obj.author,
+            user=request.user.pk,
+        ).exists()
 
     def get_recipes_count(self, obj):
-        return obj.recipes.count()
+        '''Получение количество рецептов автора.'''
+        return Recipe.objects.filter(author__username=obj).count()
 
     def get_recipes(self, obj):
-        request = self.context.get('request')
-        limit = request.query_params.get('recipes_limit')
-        print('obj:', obj)
-        recipes = obj.recipes.all()
-        if limit:
-            recipes = recipes[:int(limit)]
-            print('recipes:', recipes)
+        '''Получение рецептов автора.'''
+        recipes_limit = self.context.get('request').GET.get('recipes_limit')
+        if recipes_limit is None:
+            return Limit_field_RecipeSerializer(
+                Recipe.objects.filter(author=obj.author),
+                many=True,
+            ).data
         return Limit_field_RecipeSerializer(
-            recipes, many=True, context={'request': request}).data
+            Recipe.objects.filter(author=obj.author)[: int(recipes_limit)],
+            many=True,
+        ).data
+
+    # class SubscriptionSerializer(CustomUserSerializer):
+        # if not User.objects.filter(id=id).exists():
+        #     raise NOT_FOUND(detail="Пользователь-автор не найден.")
+        # if request.user == author:
+        #     return Response(
+        #         {"errors": "Подписаться на самого себя невозможно."},
+        #         status=status.HTTP_400_BAD_REQUEST)
