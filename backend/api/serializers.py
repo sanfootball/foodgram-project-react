@@ -7,7 +7,7 @@ from django.db.models import F
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Subscription, Tag)
-from rest_framework import serializers, status
+from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from users.models import User
 

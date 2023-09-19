@@ -1,5 +1,3 @@
-from http.client import NOT_FOUND
-
 from api.paginations import CustomPagination
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
