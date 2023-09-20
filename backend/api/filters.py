@@ -6,16 +6,17 @@ User = get_user_model()
 
 
 class IngredientFilter(FilterSet):
+    """Фильтр для ингредиентов."""
     name = filters.CharFilter(field_name="name", lookup_expr="istartswith")
 
 
 class RecipeFilter(FilterSet):
+    """Фильтр для рецептов."""
     author = filters.ModelChoiceFilter(queryset=User.objects.all())
     tags = filters.ModelMultipleChoiceFilter(
         queryset=Tag.objects.all(),
         field_name="tags__slug",
-        to_field_name="slug",
-    )
+        to_field_name="slug")
 
     class Meta:
         model = Recipe
