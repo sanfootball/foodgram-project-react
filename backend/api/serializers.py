@@ -1,7 +1,6 @@
 import base64
 
 from backend_foodgram.settings import PATTERN
-from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db.models import F
 from django.forms import ValidationError
@@ -11,8 +10,6 @@ from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from users.models import User
-
-User = get_user_model()
 
 
 class CustomUserSerializer(UserSerializer, UserCreateSerializer):
