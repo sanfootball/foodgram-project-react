@@ -1,13 +1,17 @@
 сервер https://foodgram-diplom.webhop.me/
 
-админ логин: example@mail.ru(email) пароль: admin
+админ логин: example@mail.ru(email) 
 
-# Проект "Фудграм"
+пароль: admin
+
+Документация API: https://foodgram-diplom.webhop.me/api/docs/
+
+# Проект "Foodgram"
 
 
 ## Описание
 
-Проект "Фудграм" - это онлайн-сервис и API для него. Этот проект был разработан студентом Яндекс.Практикум, Трубниковым Александром, в рамках дипломной работы. Сервис позволяет пользователям публиковать рецепты, подписываться на публикации других пользователей, а также создавать списки покупок для рецептов.
+Проект "Foodgram" - это онлайн-сервис и API для него. Этот проект был разработан студентом Яндекс.Практикум, Трубниковым Александром, в рамках дипломной работы. Сервис позволяет пользователям публиковать рецепты, подписываться на публикации других пользователей, а также создавать списки покупок для рецептов.
 
 ## Функциональность
 
@@ -26,7 +30,7 @@
 
 ## Документация API
 
-Документация к API доступна по адресу [http://localhost/api/docs/](http://localhost/api/docs/) после локального запуска проекта.
+Документация к API доступна по адресу [https://foodgram-diplom.webhop.me/api/docs/](https://foodgram-diplom.webhop.me/api/docs/).
 
 ## Технологии
 
@@ -71,14 +75,15 @@ cd <название репозитория>
    python -m venv venv
    source venv/Scripts/activate
    ```
-- Перейдите в директорию infra:
-    
+   
+- Создайте .env файл с переменными окружения:
   ```bash
-  cd infra
-  ```
-- Создайте файл .env по образцу:
-  ```bash
-  cp .env.example .env
+   DB_ENGINE=django.db.backends.postgresql
+   DB_NAME=<имя базы данных postgres>
+   DB_USER=<пользователь бд>
+   DB_PASSWORD=<пароль>
+   DB_HOST=db
+   DB_PORT=5432
   ```
 - Запустите контейнеры Docker:
   
@@ -102,7 +107,7 @@ cd <название репозитория>
 - Заполните базу тестовыми данными об ингредиентах:
 
    ```bash
-  - python manage.py load_ingredients_data
+  - python manage.py ingredients_in_data
    ```
 
 ### Локальный запуск проекта (продолжение)
@@ -113,13 +118,13 @@ cd <название репозитория>
     python manage.py createsuperuser
     ```
 
-11. Запустите локальный сервер:
+- Запустите локальный сервер:
 
     ```bash
     python manage.py runserver
     ```
 
-### Установка на удалённом сервере
+## Установка на удалённом сервере
 
 Для развертывания проекта на удаленном сервере выполните следующие шаги:
 
@@ -129,84 +134,107 @@ cd <название репозитория>
 
    ```bash
    sudo apt install docker.io
+   ```
 
-sudo apt install docker.io
-Установите Docker-compose:
-
-sudo apt install docker-compose     
+3. Установите Docker-compose:
+  
+   ```bash
+   sudo apt install docker-compose     
+   ```
 Можно также воспользоваться официальной инструкцией.
 
-Находясь локально в директории infra, скопируйте файлы docker-compose.yml и nginx.conf на удаленный сервер:
+- Находясь локально в директории infra, скопируйте файлы docker-compose.yml и nginx.conf на удаленный сервер:
+  ```
+  scp docker-compose.yml <username>@<host>:/home/<username>/
+  scp nginx.conf <username>@<host>:/home/<username>/
+  ```
+- Для правильной работы workflow необходимо добавить в Secrets данного репозитория на GitHub переменные окружения:
+  
+   Переменные PostgreSQL, ключ проекта Django и их значения по-умолчанию можно взять из файла `.env.example`, затем установить свои.
+   ```
+   DOCKER_USERNAME=<имя пользователя DockerHub>
+   DOCKER_PASSWORD=<пароль от DockerHub>
+   
+   USER=<username для подключения к удаленному серверу>
+   HOST=<ip сервера>
+   PASSPHRASE=<пароль для сервера, если он установлен>
+   SSH_KEY=<ваш приватный SSH-ключ (для получения команда: cat ~/.ssh/id_rsa)>
+   
+   TELEGRAM_TO=<id вашего Телеграм-аккаунта>
+   TELEGRAM_TOKEN=<токен вашего бота>
+   ```
+   
+## Workflow проекта
 
-scp docker-compose.yml <username>@<host>:/home/<username>/
-scp nginx.conf <username>@<host>:/home/<username>/
-Для правильной работы workflow необходимо добавить в Secrets данного репозитория на GitHub переменные окружения:
-
-Переменные PostgreSQL, ключ проекта Django и их значения по-умолчанию можно взять из файла .env.example, затем установить свои.
-
-DOCKER_USERNAME=<имя пользователя DockerHub>
-DOCKER_PASSWORD=<пароль от DockerHub>
-
-USER=<username для подключения к удаленному серверу>
-HOST=<ip сервера>
-PASSPHRASE=<пароль для сервера, если он установлен>
-SSH_KEY=<ваш приватный SSH-ключ (для получения команда: cat ~/.ssh/id_rsa)>
-
-TELEGRAM_TO=<id вашего Телеграм-аккаунта>
-TELEGRAM_TOKEN=<токен вашего бота>
-Workflow проекта
 Workflow проекта запускается при выполнении команды git push и включает следующие этапы:
 
-tests: проверка кода на соответствие PEP8.
-build_and_push_to_docker_hub: сборка и размещение образа проекта на DockerHub.
-deploy: автоматический деплой на боевой сервер и запуск проекта.
-send_massage: отправка уведомления пользователю в Телеграм.
-После успешного запуска
-После успешного завершения workflow проект будет доступен на боевом сервере. Для завершения настройки выполните следующие действия:
+ - `tests:` проверка кода на соответствие PEP8.
+ - `build_and_push_to_docker_hub:` сборка и размещение образа проекта на DockerHub.
+ - `deploy:` автоматический деплой на боевой сервер и запуск проекта.
+ - `send_massage:` отправка уведомления пользователю в Телеграм.
 
-Примените миграции:
+## После успешного запуска
 
-sudo docker-compose exec backend python manage.py migrate
-Подгрузите статику:
+### После успешного завершения workflow, проект будет доступен на боевом сервере. Для завершения настройки выполните следующие действия:
 
-sudo docker-compose exec backend python manage.py collectstatic --no-input
-Заполните базу тестовыми данными об ингредиентах:
+  - Примените миграции:
+   ```
+   sudo docker-compose exec backend python manage.py migrate
+   ```
+  - Подгрузите статику:
+  ```
+  sudo docker-compose exec backend python manage.py collectstatic --no-input
+  ```
+  - Заполните базу тестовыми данными об ингредиентах:
+  ```
+  sudo docker-compose exec backend python manage.py load_ingredients_data
+  ```
+  - Создайте суперпользователя:
+  ```
+  sudo docker-compose exec backend python manage.py createsuperuser
+  ```
 
-sudo docker-compose exec backend python manage.py load_ingredients_data
-Создайте суперпользователя:
+## Примеры некоторых запросов к API:
 
-sudo docker-compose exec backend python manage.py createsuperuser
-Примеры некоторых запросов API
-Примеры некоторых запросов к API:
+  - Регистрация пользователя:
+  ```
+  POST /api/users/
+  ```
+ - Получение данных своей учетной записи:
+ ```
+ GET /api/users/me/ 
+ ```
+ - Добавление подписки:
+ ```
+ POST /api/users/id/subscribe/
+ ```
+ - Обновление рецепта:
+ ```
+ PATCH /api/recipes/id/
+ ```
+ - Удаление рецепта из избранного:
+ ```
+ DELETE /api/recipes/id/favorite/
+ ```
+ - Получение списка ингредиентов:
+ ```
+ GET /api/ingredients/
+ ```
+ - Скачать список покупок:
+ ```
+ GET /api/recipes/download_shopping_cart/
+ ```
 
-Регистрация пользователя:
+## Пример работы проекта
 
-POST /api/v1/users/
-Получение данных своей учетной записи:
+### Проект доступен по адресу: http://foodgram-diplom.myddns.me/
 
-GET /api/v1/users/me/ 
-Добавление подписки:
+### Для доступа в админку используйте следующие данные:
 
-POST /api/v1/users/id/subscribe/
-Обновление рецепта:
+ - email - example@mail.ru
+ - пароль - admin
 
-PATCH /api/v1/recipes/id/
-Удаление рецепта из избранного:
-
-DELETE /api/v1/recipes/id/favorite/
-Получение списка ингредиентов:
-
-GET /api/v1/ingredients/
-Скачать список покупок:
-
-GET /api/v1/recipes/download_shopping_cart/
-Пример работы проекта
-Проект доступен по адресу: http://foodgram-diplom.myddns.me/
-
-Для доступа в админку используйте следующие данные:
-
-email - 
-пароль - 
 Аккаунт пользователя:
 
-Автор
+## Автор
+Трубников Александр
