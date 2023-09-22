@@ -101,17 +101,17 @@ class RecipeGETSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         """Проверяет, добавлен ли рецепт в избранное."""
-        return self.extract_from_get_is_in_shopping_cart_and_is_favorited(
+        return self.check_user_relation_to_object(
             Favorite, obj)
 
     def get_is_in_shopping_cart(self, obj):
         """Проверяет, добавлен ли рецепт в список покупок."""
-        return self.extract_from_get_is_in_shopping_cart_and_is_favorited(
+        return self.check_user_relation_to_object(
             ShoppingCart, obj)
 
-    def extract_from_get_is_in_shopping_cart_and_is_favorited(self, arg, obj):
-        """Извлекает информацию о добавлении рецепта в
-        список покупок или избранное."""
+    def check_user_relation_to_object(self, arg, obj):
+        """Проверяет отношение текущего пользователя к объекту (рецепту)
+        в контексте избранного или списка покупок."""
         current_user = self.context['request'].user
         if current_user.is_anonymous:
             return False
@@ -160,28 +160,19 @@ class RecipeCreateSerializer(RecipeGETSerializer):
         """Создает новый рецепт."""
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        print("Ingredients List:", ingredients)
-        print("Tags:", tags)
-        author = self.context.get('request').user
-        print("Author:", author)
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         self.create_ingredients(ingredients, recipe)
-        print("Recipe:", recipe)
         return recipe
 
     def update(self, instance, validated_data):
         """Обновляет рецепт."""
-        print(instance)
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        print("tags:", tags)
         instance.ingredients.clear()
         instance.tags.clear()
         instance.tags.set(tags)
         self.create_ingredients(ingredients, instance)
-        print(instance)
-        print(validated_data)
         return super().update(instance, validated_data)
 
     def to_representation(self, recipe):
