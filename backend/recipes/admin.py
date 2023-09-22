@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag)
@@ -7,6 +8,7 @@ from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
 class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredient
     extra = 1
+    min_num = 1
 
 
 @admin.register(Ingredient)
@@ -36,11 +38,19 @@ class RecipeAdmin(admin.ModelAdmin):
 
     empty_value_display = '-empty-'
     list_editable = ('author',)
-    list_display = ('pk', 'name', 'author', 'text', 'cooking_time', 'pub_date')
+    list_display = ('pk', 'name', 'author', 'text', 'cooking_time',
+                    'display_image', 'pub_date')
     list_filter = ('author', 'name', 'tags')
     search_fields = ('name',)
     ordering = ('pub_date', 'name',)
     inlines = [RecipeIngredientInline]
+
+    def display_image(self, obj):
+        return format_html(
+            f'<img src="{obj.image.url}" '
+            f'style="max-height: 100px; max-width: 100px;" />')
+
+    display_image.short_description = 'Image'
 
     def num_favorites(self, obj):
         """Подсчитывает количество избранных рецептов
