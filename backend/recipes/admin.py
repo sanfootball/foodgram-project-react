@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag)
@@ -59,7 +60,13 @@ class RecipeAdmin(admin.ModelAdmin):
 
     num_favorites.short_description = 'Избранное'
 
-    readonly_fields = ('num_favorites',)
+    fields = ('name', 'text', 'author', 'cooking_time', 'tags', 'image',
+              'preview', 'num_favorites',)
+    readonly_fields = ('preview', 'num_favorites',)
+
+    def preview(self, obj):
+        return mark_safe(f'<img src="{obj.image.url}" '
+                         f'style="max-height: 200px; max-width: 200px;"/>')
 
 
 @admin.register(RecipeIngredient)
