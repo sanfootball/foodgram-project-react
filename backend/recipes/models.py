@@ -68,25 +68,22 @@ class Recipe(models.Model):
         verbose_name="Дата создания", auto_now_add=True
     )
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="recipes",
-        verbose_name="Автор"
+        User, on_delete=models.CASCADE, verbose_name="Автор"
     )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name="Время приготовления, мин",
         validators=[MinValueValidator(1, message="Не меньше 1 мин")]
     )
-    tags = models.ManyToManyField(
-        Tag, related_name="recipes", verbose_name="Теги"
-    )
+    tags = models.ManyToManyField(Tag, verbose_name="Теги")
     ingredients = models.ManyToManyField(
-        Ingredient, through="RecipeIngredient", related_name="recipes",
-        verbose_name="ингредиенты"
+        Ingredient, through="RecipeIngredient", verbose_name="ингредиенты"
     )
 
     class Meta:
         ordering = ["-pub_date", "name"]
         verbose_name = "Рецепт"
         verbose_name_plural = "Рецепты"
+        default_related_name = "recipes"
         constraints = [
             models.UniqueConstraint(
                 fields=["name", "author"], name="unique_recipe_author"
