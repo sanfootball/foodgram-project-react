@@ -41,9 +41,10 @@ class RecipeAdmin(admin.ModelAdmin):
     list_editable = ('author',)
     list_display = ('pk', 'name', 'author', 'text', 'cooking_time',
                     'display_image', 'pub_date')
+    list_display_links = ('name',)
     list_filter = ('author', 'name', 'tags')
     search_fields = ('name',)
-    ordering = ('pub_date', 'name',)
+    ordering = ('-pub_date', 'name',)
     inlines = [RecipeIngredientInline]
 
     def display_image(self, obj):

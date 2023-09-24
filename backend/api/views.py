@@ -81,31 +81,12 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Recipe."""
     queryset = Recipe.objects.prefetch_related(
-        'favorites', 'shopping_cart').select_related('author').all()
+        'tags', 'ingredients').select_related('author').all()
     serializer_class = RecipeGETSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, AuthorOrReadOnly,)
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-
-    def get_queryset(self):
-        """Возвращает список рецептов, учитывая фильтры."""
-        queryset = super().get_queryset()
-        is_favorited = self.request.query_params.get('is_favorited')
-        is_in_shopping_cart = self.request.query_params.get(
-            'is_in_shopping_cart')
-        if is_favorited not in ('0', '1'):
-            is_favorited = None
-        if is_in_shopping_cart not in ('0', '1'):
-            is_in_shopping_cart = None
-
-        if self.request.user.is_authenticated:
-            if is_favorited == '1':
-                queryset = queryset.filter(favorites__user=self.request.user)
-            if is_in_shopping_cart == '1':
-                queryset = queryset.filter(
-                    shopping_cart__user=self.request.user)
-        return queryset
 
     def get_serializer_class(self):
         """Определяет класс сериализатора в зависимости от метода запроса."""
