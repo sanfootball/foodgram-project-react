@@ -238,4 +238,5 @@ Workflow проекта запускается при выполнении ко�
 
 ## Автор
 Трубников Александр    
-petrovskii1980@mail.ru
+email: petrovskii1980@mail.ru  
+Telegram: https://t.me/sanfootball
